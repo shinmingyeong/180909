@@ -1,0 +1,190 @@
+package com.mystudy.burgerproject;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Scanner;
+
+import common_util.JDBC_Close;
+
+public class orderbag {
+	
+	private static final String DRIVER = "oracle.jdbc.OracleDriver";
+	private	static final String URL = "jdbc:oracle:thin:@localhost:1521:xe";
+	private	static final String USER = "Burger";
+	private	static final String PASSWORD = "burger";
+	
+	Connection conn;
+	PreparedStatement pstmt;
+	ResultSet rs;
+	
+	static {
+		try {
+			Class.forName(DRIVER);
+			System.out.println(">> 오라클 JDBC 드라이버 로딩 성공!");
+		} catch (ClassNotFoundException e) {
+			System.out.println("[예외발생]");
+			e.printStackTrace();
+		}
+	}
+	
+	Scanner choice = new Scanner(System.in);
+	int pick;
+	
+	//주문한 버거취소 
+	public void cancelbur(String id) {
+		
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			
+			StringBuilder sb = new StringBuilder();
+	        sb.append("UPDATE ORDERS SET BURGERID = 0 "
+	        		+ ", DRINKID = 0, DESSERTID = 0, SETID = 0 "
+	        		+ "where burgerid = ? and custid = ? and list = ? ");
+			pstmt = conn.prepareStatement(sb.toString());
+			
+			System.out.println("취소를 원하시는 번호를 선택해주세요.");
+			int cancelBurger = choice.nextInt();
+			choice.nextLine();
+			
+			System.out.println("취소하시는 수량을 선택해주세요.");
+			int cancelNum = choice.nextInt();
+	        choice.nextLine();
+	        
+	        for (int i=0; i<=cancelNum; i++) {
+	            pstmt.setInt(1, cancelBurger);                     
+	            pstmt.setString(2, id); //custid =3                  
+	            pstmt.setInt(3, i);
+	            pstmt.executeUpdate();
+	        }
+	        
+	        System.out.println("취소가 완료되었습니다.");
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+		}
+			
+	}
+	
+	//주문한 음료취소
+	public void canceldk(String id) {
+		
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			
+			StringBuilder sb = new StringBuilder();
+	        sb.append("update orders set drinkid = 0 "
+	        		+ ", BURGERID = 0, DESSERTID = 0, SETID = 0 "
+	        		+ "where drinkid = ? and custid = ? and list = ? ");
+			pstmt = conn.prepareStatement(sb.toString());
+			
+			System.out.println("취소를 원하시는 번호를 선택해주세요.");
+			int canceldrink = choice.nextInt();
+			choice.nextLine();
+			
+			System.out.println("취소하시는 수량을 선택해주세요.");
+			int cancelNum = choice.nextInt();
+	        choice.nextLine();
+	        
+	        for (int i=0; i<=cancelNum; i++) {
+	            pstmt.setInt(1, canceldrink);                     
+	            pstmt.setString(2, id); //custid =3                  
+	            pstmt.setInt(3, i);
+	            pstmt.executeUpdate();
+	        }
+	        
+	        System.out.println("취소가 완료되었습니다.");
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+		}
+		
+	}
+	
+	//주문한 디저트취소
+	public void canceldessert(String id) {
+		
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			
+			StringBuilder sb = new StringBuilder();
+	        sb.append("update orders set DESSERTID = 0 "
+	        		+ ", BURGERID = 0, DRINKID = 0, SETID = 0 "
+	        		+ "where dessertid = ? and custid = ? and list = ? ");
+			pstmt = conn.prepareStatement(sb.toString());
+			
+			System.out.println("취소를 원하시는 번호를 선택해주세요.");
+			int canceldessert = choice.nextInt();
+			choice.nextLine();
+			
+			System.out.println("취소하시는 수량을 선택해주세요.");
+			int cancelNum = choice.nextInt();
+	        choice.nextLine();
+	        
+	        for (int i=0; i<=cancelNum; i++) {
+	            pstmt.setInt(1, canceldessert);                     
+	            pstmt.setString(2, id); //custid =3                  
+	            pstmt.setInt(3, i);
+	            pstmt.executeUpdate();
+	        }
+	        
+	        System.out.println("취소가 완료되었습니다.");
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+		}
+		
+	}
+	
+	//주문한 세트 취소
+	public void cancelset(String id) {
+		
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			
+			StringBuilder sb = new StringBuilder();
+	        sb.append("update orders set SETID = 0 "
+	        		+ ", BURGERID = 0, DRINKID = 0, DESSERTID = 0 "
+	        		+ "where SETID = ? and custid = ? and list = ? ");
+			pstmt = conn.prepareStatement(sb.toString());
+			
+			System.out.println("취소를 원하시는 번호를 선택해주세요.");
+			int canceldessert = choice.nextInt();
+			choice.nextLine();
+			
+			System.out.println("취소하시는 수량을 선택해주세요.");
+			int cancelNum = choice.nextInt();
+	        choice.nextLine();
+	        
+	        for (int i=0; i<=cancelNum; i++) {
+	            pstmt.setInt(1, canceldessert);                     
+	            pstmt.setString(2, id); //custid =3                  
+	            pstmt.setInt(3, i);
+	            pstmt.executeUpdate();
+	        }
+	        
+	        System.out.println("취소가 완료되었습니다.");
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+		}
+		
+	}
+	
+	
+	
+
+}
