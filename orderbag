@@ -36,6 +36,119 @@ public class orderbag {
 	Scanner choice = new Scanner(System.in);
 	int pick;
 	
+	//버거합계
+	public int burgersum(String id) {
+		int str=0;
+		
+	try {
+		conn = DriverManager.getConnection(URL, USER, PASSWORD);
+		StringBuffer sql = new StringBuffer();
+		sql.append("select sum((select price from burger where burgerid = o.burgerid)) from orders o");
+		sql.append(" where custid =?");
+				
+		pstmt = conn.prepareStatement(sql.toString());
+		pstmt.setString(1, id);
+		rs = pstmt.executeQuery();
+				
+		while(rs.next()) {
+			str += rs.getInt(1);
+		}
+				
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+		}
+			
+		return str;
+		}
+		
+	
+	//음료합계
+	public int drinksum(String id) {
+		int str=0;
+			
+			try {
+				conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				StringBuffer sql = new StringBuffer();
+				sql.append("select sum((select price from drink where drinkid = o.drinkid)) from orders o");
+				sql.append(" where custid =?");
+				
+				pstmt = conn.prepareStatement(sql.toString());
+				pstmt.setString(1, id);
+				rs = pstmt.executeQuery();
+				
+				while(rs.next()) {
+					str += rs.getInt(1);
+				}
+				
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+				JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+			}
+			
+			return str;
+		}
+		
+		//디저트합계
+		//디저트합계
+		public int dessertsum(String id) {
+			int str=0;
+			
+			try {
+				conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				StringBuffer sql = new StringBuffer();
+				sql.append("select sum((select price from dessert where dessertid = o.dessertid)) from orders o");
+				sql.append(" where custid =?");
+				
+				pstmt = conn.prepareStatement(sql.toString());
+				pstmt.setString(1, id);
+				rs = pstmt.executeQuery();
+				
+				while(rs.next()) {
+					str += rs.getInt(1);
+				}
+			
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+				JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+			}
+			
+			return str;
+		}
+		
+		//세트합계
+		//세트합계
+		public int setsum(String id) {
+			int str=0;
+			
+			try {
+				conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				StringBuffer sql = new StringBuffer();
+				sql.append("select sum((select price from SETMENU where SETID = o.SETID)) from orders o");
+				sql.append(" where custid =?");
+				
+				pstmt = conn.prepareStatement(sql.toString());
+				pstmt.setString(1, id);
+				rs = pstmt.executeQuery();
+				
+				while(rs.next()) {
+					str += rs.getInt(1);
+				}
+				
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+				JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+			}
+			
+			return str;
+		}
+		
+			
+	
 	//주문한 버거취소 
 	public void cancelbur(String id) {
 		
@@ -43,8 +156,9 @@ public class orderbag {
 			conn = DriverManager.getConnection(URL, USER, PASSWORD);
 			
 			StringBuilder sb = new StringBuilder();
-	        sb.append("UPDATE ORDERS SET BURGERID = 0 "
-	        		+ ", DRINKID = 0, DESSERTID = 0, SETID = 0 "
+	        sb.append("UPDATE ORDERS SET BURGERID = ? "
+//	        		+ "0 "
+//	        		+ ", DRINKID = 0, DESSERTID = 0, SETID = 0 "
 	        		+ "where burgerid = ? and custid = ? and list = ? ");
 			pstmt = conn.prepareStatement(sb.toString());
 			
@@ -56,10 +170,11 @@ public class orderbag {
 			int cancelNum = choice.nextInt();
 	        choice.nextLine();
 	        
-	        for (int i=0; i<=cancelNum; i++) {
-	            pstmt.setInt(1, cancelBurger);                     
-	            pstmt.setString(2, id); //custid =3                  
-	            pstmt.setInt(3, i);
+	        for (int i=1; i<=cancelNum; i++) {
+	            pstmt.setInt(1, 0);                     
+	            pstmt.setInt(2, cancelBurger);                     
+	            pstmt.setString(3, id); //custid =3                  
+	            pstmt.setInt(4, i);
 	            pstmt.executeUpdate();
 	        }
 	        
@@ -93,7 +208,7 @@ public class orderbag {
 			int cancelNum = choice.nextInt();
 	        choice.nextLine();
 	        
-	        for (int i=0; i<=cancelNum; i++) {
+	        for (int i=1; i<=cancelNum; i++) {
 	            pstmt.setInt(1, canceldrink);                     
 	            pstmt.setString(2, id); //custid =3                  
 	            pstmt.setInt(3, i);
@@ -130,7 +245,7 @@ public class orderbag {
 			int cancelNum = choice.nextInt();
 	        choice.nextLine();
 	        
-	        for (int i=0; i<=cancelNum; i++) {
+	        for (int i=1; i<=cancelNum; i++) {
 	            pstmt.setInt(1, canceldessert);                     
 	            pstmt.setString(2, id); //custid =3                  
 	            pstmt.setInt(3, i);
@@ -167,7 +282,7 @@ public class orderbag {
 			int cancelNum = choice.nextInt();
 	        choice.nextLine();
 	        
-	        for (int i=0; i<=cancelNum; i++) {
+	        for (int i=1; i<=cancelNum; i++) {
 	            pstmt.setInt(1, canceldessert);                     
 	            pstmt.setString(2, id); //custid =3                  
 	            pstmt.setInt(3, i);
