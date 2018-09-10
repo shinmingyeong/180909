@@ -1,0 +1,170 @@
+package com.mystudy.burgerproject;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Scanner;
+
+import common_util.JDBC_Close;
+
+public class orderbag {
+	
+	private static final String DRIVER = "oracle.jdbc.OracleDriver";
+	private	static final String URL = "jdbc:oracle:thin:@localhost:1521:xe";
+	private	static final String USER = "Burger";
+	private	static final String PASSWORD = "burger";
+	
+	Connection conn;
+	PreparedStatement pstmt;
+	ResultSet rs;
+	
+	static {
+		try {
+			Class.forName(DRIVER);
+			System.out.println(">> 오라클 JDBC 드라이버 로딩 성공!");
+		} catch (ClassNotFoundException e) {
+			System.out.println("[예외발생]");
+			e.printStackTrace();
+		}
+	}
+	
+	Scanner choice = new Scanner(System.in);
+	int pick;
+	
+	//버거합계
+	public int burgersum(String id) {
+		int str=0;
+		
+	try {
+		conn = DriverManager.getConnection(URL, USER, PASSWORD);
+		StringBuffer sql = new StringBuffer();
+		sql.append("select sum((select price from burger where burgerid = o.burgerid)) from orders o");
+		sql.append(" where custid =?");
+				
+		pstmt = conn.prepareStatement(sql.toString());
+		pstmt.setString(1, id);
+		rs = pstmt.executeQuery();
+				
+		while(rs.next()) {
+			str += rs.getInt(1);
+		}
+				
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+		}
+			
+		return str;
+		}
+		
+	//음료합계
+	public int drinksum(String id) {
+		int str=0;
+			
+			try {
+				conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				StringBuffer sql = new StringBuffer();
+				sql.append("select sum((select price from drink where drinkid = o.drinkid)) from orders o");
+				sql.append(" where custid =?");
+				
+				pstmt = conn.prepareStatement(sql.toString());
+				pstmt.setString(1, id);
+				rs = pstmt.executeQuery();
+				
+				while(rs.next()) {
+					str += rs.getInt(1);
+				}
+				
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+				JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+			}
+			
+			return str;
+		}
+		
+	//디저트합계
+	public int dessertsum(String id) {
+		int str=0;
+			
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			StringBuffer sql = new StringBuffer();
+			sql.append("select sum((select price from dessert where dessertid = o.dessertid)) from orders o");
+			sql.append(" where custid =?");
+				
+			pstmt = conn.prepareStatement(sql.toString());
+			pstmt.setString(1, id);
+			rs = pstmt.executeQuery();
+				
+			while(rs.next()) {
+				str += rs.getInt(1);
+			}
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+		}
+			
+		return str;
+	}
+		
+	//세트합계
+	public int setsum(String id) {
+		int str=0;
+			
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			StringBuffer sql = new StringBuffer();
+			sql.append("select sum((select price from SETMENU where SETID = o.SETID)) from orders o");
+			sql.append(" where custid =?");
+				
+			pstmt = conn.prepareStatement(sql.toString());
+			pstmt.setString(1, id);
+			rs = pstmt.executeQuery();
+				
+			while(rs.next()) {
+				str += rs.getInt(1);
+			}
+				
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+		}
+			
+		return str;
+	}
+		
+			
+	
+	//주문한 장바구니 목록 삭제
+	public void cancelmybag(String id) {
+		
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			StringBuilder sb = new StringBuilder();
+			sb.append("DELETE FROM ORDERS WHERE CUSTID = ? ");
+			
+			pstmt = conn.prepareStatement(sb.toString());
+			
+			pstmt.setString(1, id);
+			pstmt.executeUpdate();
+			
+			System.out.println("취소가 완료되었습니다.");
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+		}
+		
+	}
+	
+
+}
