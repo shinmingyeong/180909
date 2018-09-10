@@ -1,0 +1,273 @@
+package com.mystudy.burgerproject;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Calendar;
+import java.util.Scanner;
+
+import common_util.JDBC_Close;
+
+public class checkbill {
+	
+	private static final String DRIVER = "oracle.jdbc.OracleDriver";
+	private	static final String URL = "jdbc:oracle:thin:@localhost:1521:xe";
+	private	static final String USER = "Burger";
+	private	static final String PASSWORD = "burger";
+	
+	Connection conn;
+	PreparedStatement pstmt;
+	ResultSet rs;
+	
+	Scanner choice = new Scanner(System.in);
+	int pick;
+	orderbag ordbag = new orderbag();
+	Burger burger = new Burger();
+	
+	static {
+		try {
+			Class.forName(DRIVER);
+			System.out.println(">> 오라클 JDBC 드라이버 로딩 성공!");
+		} catch (ClassNotFoundException e) {
+			System.out.println("[예외발생]");
+			e.printStackTrace();
+		}
+	}
+	
+
+	//날짜출력
+	public void date() {
+		Calendar cal = Calendar.getInstance();
+		
+		String dateTime = cal.get(Calendar.YEAR) 
+				+ "-" + (cal.get(Calendar.MONTH) + 1)
+				+ "-" + cal.get(Calendar.DATE)
+				+ " " + cal.get(Calendar.HOUR_OF_DAY)
+				+ ":" + cal.get(Calendar.MINUTE)
+				+ ":" + cal.get(Calendar.SECOND);
+		
+		System.out.println(dateTime);
+	}
+	
+	//영수증 
+	public void bill(String id) {
+			
+			System.out.println("-----------------------------------------------");
+			System.out.println("[ 영 수 증 ]");
+			date();
+			System.out.println("-----------------------------------------------");
+			
+			int i = ordbag.burgersum(id);
+			int j = ordbag.drinksum(id);
+			int k = ordbag.dessertsum(id);
+			int s = ordbag.setsum(id);
+			int sum = i+j+k+s;
+			
+			System.out.println("주문번호\t 상품명\t 수량\t 단가 ");
+			burger.myorderlistbug(id);
+			burger.myorderlistdk(id);
+			burger.myorderlistdes(id);
+			burger.myorderlistset(id);
+			
+			System.out.println("		[합계] " + sum);
+			System.out.println("		[최종 결제금액] " + pay);
+			System.out.println("		[남은 포인트] " + (int)(restPoint(id)));
+			System.out.println("-----------------------------------------------");
+			
+		}	
+	
+	
+	//포인트
+	//1.가지고 있는 포인트확인
+	public int restPoint (String id) {
+		
+		int result = 0;
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			
+			StringBuffer sql = new StringBuffer();
+			sql.append("select point from customer where custid = ?");
+			pstmt = conn.prepareStatement(sql.toString());
+			
+			pstmt.setString(1, id);
+			rs = pstmt.executeQuery();
+			
+			while (rs.next()) {
+				result =rs.getInt(1);
+			}
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+//		finally {
+//			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+//			
+//		}
+		
+		return result;
+	
+	}
+	
+	double addPoint;
+	double pay;
+	
+	//2.포인트 합산 
+	public double totPoint (String id) {
+		
+		int i = ordbag.burgersum(id);
+		int j = ordbag.drinksum(id);
+		int k = ordbag.dessertsum(id);
+		int s = ordbag.setsum(id);
+		
+		addPoint =(i+j+k+s)*0.05;
+		double result = restPoint(id); //포인트가 없다면 이것을 반환
+		
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+		
+		StringBuffer sql = new StringBuffer();
+			
+		sql.append("update customer ");
+		sql.append("set point = ? ");
+		sql.append("where custid = ? ");
+		
+		if(restPoint(id) !=0) {
+			result += addPoint; ///포인트가 존재하여 합산한 포인트 반환
+		} else {
+			result = addPoint;
+		};
+		
+		pstmt = conn.prepareStatement(sql.toString());
+		
+		pstmt.setDouble(1, result);
+		pstmt.setString(2, id);
+		
+		pstmt.executeUpdate();
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+//		finally {
+//			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+//		}
+		
+		return result;
+		
+	}
+	
+	//3.포인트 수정 
+	public void fixPoint(int pick, String id) {
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			
+			StringBuffer sql = new StringBuffer();
+			sql.append("update customer set point = ? where custid = ?");
+			
+			int fixPoint = restPoint(id)-pick;
+			pstmt = conn.prepareStatement(sql.toString());
+			
+			pstmt.setInt(1, fixPoint);
+			pstmt.setString(2, id);
+			pstmt.executeUpdate();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} 
+//		finally {
+//			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+//		}
+		
+	}
+	
+	//등급 !!
+	//1.등급 수정 
+	public void Updategrade(String id) { 
+		
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			
+			StringBuffer sql = new StringBuffer();
+			sql.append("update customer set grade = ? where custid = ?");
+			
+			String grade = "";
+			if (restPoint(id)<=2000) {
+				grade = "4등급";
+			} else if (restPoint(id)<=5000) {
+				grade = "3등급";
+			} else if (restPoint(id)<=10000) {
+				grade = "2등급";
+			} else {
+				grade = "1등급";
+			}
+			
+			pstmt = conn.prepareStatement(sql.toString());
+		
+			pstmt.setString(1, grade);
+			pstmt.setString(2, id);
+			pstmt.executeUpdate();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} 
+//			finally {
+//			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+//		}
+		
+	}
+	
+	//2.등급 확인
+	public String whatGrade(String id) {
+		String result = null;
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			StringBuffer sql = new StringBuffer();
+			
+			sql.append("select grade from customer where custid = ?");
+			
+			pstmt = conn.prepareStatement(sql.toString());
+			pstmt.setString(1, id);
+			rs = pstmt.executeQuery();
+			
+			while(rs.next()) {
+				String str = "";
+				str = rs.getString(1);
+				result = str;
+			}		
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+//		finally {
+//			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+//		}
+		
+		return result;
+		
+	}
+	
+	//카드로 그레이드 뒤에 와야함
+	public double payment(int pick,String id) {
+		
+		if(whatGrade(id).equals("3등급")) {
+			pay = ((ordbag.burgersum(id) + ordbag.drinksum(id) 
+				+ ordbag.dessertsum(id) + ordbag.setsum(id))*0.95)-pick;
+		} else if (whatGrade(id).equals("2등급")) {
+			pay = ((ordbag.burgersum(id) + ordbag.drinksum(id) 
+			+ ordbag.dessertsum(id) + ordbag.setsum(id))*0.90)-pick;
+		} else if (whatGrade(id).equals("1등급")) {
+			pay = ((ordbag.burgersum(id) + ordbag.drinksum(id) 
+			+ ordbag.dessertsum(id) + ordbag.setsum(id))*0.85)-pick;
+
+		} else {
+			pay = (ordbag.burgersum(id) + ordbag.drinksum(id) 
+			+ ordbag.dessertsum(id) + ordbag.setsum(id))-pick;
+
+		}
+		return pay ;
+		
+	}
+	
+	
+}
