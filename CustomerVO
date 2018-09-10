@@ -1,0 +1,72 @@
+package com.mystudy.burgerproject;
+
+import java.util.ArrayList;
+
+public class CustomerVO {
+	
+	private String custid;
+	private String pw;
+	private String phoneNo;
+	private int point;
+	
+	
+	public CustomerVO(String custid, String pw, String phoneNo, int point) {
+		this.custid = custid;
+		this.pw = pw;
+		this.phoneNo = phoneNo;
+		this.point = point;
+	}
+	
+	public CustomerVO() {
+		this.custid = custid;
+		this.pw = pw;
+		this.phoneNo = phoneNo;
+		this.point = point;
+	}
+
+	public String getCustid() {
+		return custid;
+	}
+
+	public void setCustid(String custid) {
+		this.custid = custid;
+	}
+
+	public String getPw() {
+		return pw;
+	}
+
+	public void setPw(String pw) {
+		this.pw = pw;
+	}
+
+	public String getPhoneNo() {
+		return phoneNo;
+	}
+
+	public void setPhoneNo(String phoneNo) {
+		this.phoneNo = phoneNo;
+	}
+
+	public int getPoint() {
+		return point;
+	}
+
+	public void setPoint(int point) {
+		this.point = point;
+	}
+
+	@Override
+	public String toString() {
+		return custid + "\t" + pw + "\t" + phoneNo + "\t" + point;
+		
+	}
+	
+	public void title() {
+		System.out.println("아이디\t 비밀번호\t 전화번호\t 포인트");
+	
+	}
+	
+	
+
+}
