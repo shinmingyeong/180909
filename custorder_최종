@@ -1,0 +1,608 @@
+package com.mystudy.burgerproject;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Scanner;
+
+import common_util.JDBC_Close;
+
+public class custorder {
+	
+	private static final String DRIVER = "oracle.jdbc.OracleDriver";
+	private	static final String URL = "jdbc:oracle:thin:@localhost:1521:xe";
+	private	static final String USER = "Burger";
+	private	static final String PASSWORD = "burger";
+	
+	Connection conn;
+	PreparedStatement pstmt;
+	ResultSet rs;
+	
+	static {
+		try {
+			Class.forName(DRIVER);
+			System.out.println(">> 오라클 JDBC 드라이버 로딩 성공!");
+		} catch (ClassNotFoundException e) {
+			System.out.println("[예외발생]");
+			e.printStackTrace();
+		}
+	}
+	
+	Scanner choice = new Scanner(System.in);
+	int pick;
+	Burger burger = new Burger();
+	
+	CustomerVO cvo = new CustomerVO();
+	
+	BurgerVO bvo = new BurgerVO();
+	DrinkVO dvo = new DrinkVO();
+	DessertVO desvo = new DessertVO();
+	SetVO setvo = new SetVO();
+	
+	OrderVO ord = new OrderVO();
+	orderbag ordbag = new orderbag();
+	checkbill check = new checkbill();
+	login log = new login();
+	
+	public void start() {
+		
+		System.out.println("어서오세요. 헬로버거입니다!");
+		System.out.println("회원이시면 < 1 >, 비회원이시면 < 2 >를 눌러주세요!");
+		
+		pick = choice.nextInt();
+		choice.nextLine();
+	
+		if(pick == 1) {
+			login();
+		} else if (pick == 2) {
+			addCust();
+		} else {
+			System.out.println("< 1~2 > 다시 선택해주세요.(T_T)");
+			System.out.println("-----------------------------------------------");
+			start();
+		}
+	}
+
+	//회원주문
+	public String id;
+	public String login() {
+		String result =  null;
+		
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			
+			StringBuilder sb = new StringBuilder();
+			sb.append("select * from customer where custid =? and password =?");
+			pstmt = conn.prepareStatement(sb.toString());				
+			
+			System.out.println("아이디를 입력해주세요.");
+			String custId = choice.nextLine();
+			System.out.println("비밀번호를 입력해주세요.");
+			String password = choice.nextLine();
+				
+			pstmt.setString(1, custId);
+			pstmt.setString(2, password);
+			
+			rs=pstmt.executeQuery();
+			
+			if(rs.next()==true) {
+				result=custId;
+				id = custId;
+				System.out.println("접속에 성공하셨습니다.");
+				System.out.println("로 딩 중 ~");
+				
+				JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+				pick();
+				
+			} else {
+				
+				while (pick!=1 || pick !=2 || pick !=3) {
+					System.out.println("접속에 실패하셨습니다.");
+					System.out.println("재시도를 원하시면 <1>, 회원가입을 원하시면 <2>,"
+							+ "종료를 원하시면 <3> 을 눌러주세요.");
+					
+					pick = choice.nextInt();
+					choice.nextLine();
+					
+					if(pick==1) {
+						login();
+					} else if (pick==2) {
+						addCust();
+					} else if(pick==3){
+						System.out.println("감사합니다.");
+						System.out.println("***********************************************");
+						start();
+					} else {
+						System.out.println("< 1~3 > 다시 선택해주세요.(T_T)");
+						System.out.println("-----------------------------------------------");
+					}	
+				}
+				
+			}
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+		}
+		
+		return result;
+		
+	}
+	
+	//비회원주문
+	public void addCust() {
+		
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+				
+			StringBuilder sb = new StringBuilder();
+			sb.append("INSERT INTO CUSTOMER ");
+			sb.append("		(CUSTID, PASSWORD, PHONE) ");
+			sb.append("VALUES(?, ?, ?)");
+			pstmt = conn.prepareStatement(sb.toString());
+			
+			
+			System.out.println("[회원가입]");
+			System.out.println("아이디를 설정해주세요.");
+			String custid = choice.nextLine();
+			
+			System.out.println("비밀번호를 설정해주세요.");
+			String password = choice.nextLine();
+			System.out.println("비밀번호를 한번 더 입력해주세요.");
+			String passwordcheck = choice.nextLine();
+			
+			if (password.equals(passwordcheck)) {
+				System.out.println("비밀번호 설정이 완료되었습니다.");
+			} else {
+				System.out.println("비밀번호를 다시 한번 확인해주세요.(T_T)");
+				addCust();
+				
+			}
+			
+			System.out.println("핸드폰 번호를 입력해주세요.");
+			String phone = choice.nextLine();
+			
+			pstmt.setString(1, custid);
+			pstmt.setString(2, password);
+			pstmt.setString(3, phone);
+			pstmt.executeUpdate();
+			System.out.println("설정이 되었습니다.");
+			System.out.println("로그인 화면으로 돌아갑니다!");
+			System.out.println("-----------------------------------------------");
+			
+			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+			login();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+			
+		}
+	}
+	
+	//메뉴
+	public void pick() {
+		System.out.println("< 메 뉴 >");
+		System.out.println("원하시는 번호를 눌러주세요!");
+		System.out.println("1.버거  2.음료  3.디저트  4.세트  5.종료  6.마이페이지");
+		
+		pick = choice.nextInt();
+		choice.nextLine();
+		
+		if(pick == 1) {
+			selectBurger(id);
+		} else if (pick==2) {
+			selectDrink(id);
+		} else if (pick==3) {
+			selectDs(id);
+		} else if (pick==4) {
+			selectSet(id);
+		} else if (pick==5){
+			System.out.println("감사합니다.");
+			System.out.println("***********************************************");
+			start();
+		} else if (pick==6) {
+			log.mypage(id);
+			pick();
+		} else {
+			System.out.println("< 1~6 > 다시 선택해주세요.(T_T)");
+			System.out.println("-----------------------------------------------");
+			pick();
+		}
+		
+	}
+	
+	//추가주문
+	public void add(String id) {
+		
+		System.out.println("------------------------------------------------"); 
+		System.out.println("주문이 끝났으면 < 1 >,");
+        System.out.println("추가주문을 원하시면 < 2 > 를 눌러주세요.");
+        System.out.println("------------------------------------------------"); 
+        
+        pick = choice.nextInt();
+        choice.nextLine();
+         
+		
+         if(pick == 1) {
+      	   bag();
+         } else if (pick == 2) {
+      	   addmenu(id);
+         } else {
+      	   System.out.println("< 1~2 > 다시 선택해주세요.(T_T)");
+      	   System.out.println("-----------------------------------------------");
+      	   add(id);
+      	   
+         }
+		
+	}
+	
+	//추가주문 메뉴출력
+	public void addmenu(String id) {
+		
+		System.out.println("추가주문을 원하시는 메뉴를 선택해주세요.");
+    	System.out.println("1.버거  2.음료  3.디저트  4.세트");
+    	  
+    	  pick = choice.nextInt();
+	      choice.nextLine();
+	          
+	          if(pick==1) {
+	        	  selectBurger(id);
+	          } else if(pick==2) {
+	        	  selectDrink(id);
+	          } else if(pick==3) {
+	        	  selectDs(id);
+	          } else if(pick==4) {
+	        	  selectSet(id);
+	          } else {
+	        	  System.out.println("< 1~4 > 다시 선택해주세요.(T_T)");
+	        	  System.out.println("-----------------------------------------------");
+	        	  addmenu(id);
+	          }
+		
+		
+	}
+	
+	//회원의 버거주문
+	public void selectBurger(String id) {
+        
+        try {
+           conn = DriverManager.getConnection(URL, USER, PASSWORD);
+           
+           String sql = "";
+			sql += "INSERT INTO ORDERS ";
+			sql += "(ORDERID, CUSTID, BURGERID, "
+					+ "DRINKID, DESSERTID, SETID, ORDERDATE, LIST) ";
+			sql += "VALUES ((SELECT NVL(MAX(ORDERID),0)+1 ";
+			sql += "FROM ORDERS), ";
+			sql += "?, ?, 0, 0, 0, sysdate, ";
+			sql += "(SELECT NVL(MAX(LIST),0)+1\r\n" + 
+					"        FROM ORDERS WHERE CUSTID = ?)) ";
+			pstmt = conn.prepareStatement(sql);
+			
+           System.out.println("**버거메뉴를 선택해주세요.");
+           burger.printDataBurger();
+           int selectbur = choice.nextInt();
+           
+           System.out.println("수량을 선택해주세요.");
+           
+           int num = choice.nextInt();
+           choice.nextLine();
+           
+           for(int i=1; i<=num; i++) {
+	           pstmt.setString(1, id);
+	           pstmt.setInt(2, selectbur);
+	           pstmt.setString(3, id);
+	           pstmt.executeUpdate();
+           }
+           
+           System.out.println("버거선택이 완료되었습니다~~~~!^0^");
+           add(id);
+           
+        } catch (SQLException e) {
+           e.printStackTrace();
+        } finally {
+           JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+        }
+     }
+	
+	//회원의 음료주문
+	public void selectDrink(String id) {
+		
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			
+			String sql = "";
+			sql += "INSERT INTO ORDERS ";
+			sql += "(ORDERID, CUSTID, DRINKID, "
+					+ "BURGERID, DESSERTID, SETID, ORDERDATE, LIST) ";
+			sql += "VALUES ((SELECT NVL(MAX(ORDERID),0)+1 ";
+			sql += "FROM ORDERS), ";
+			sql += "?, ?, 0, 0, 0, sysdate, ";
+			sql += "(SELECT NVL(MAX(LIST),0)+1\r\n" + 
+					"        FROM ORDERS WHERE CUSTID = ?)) ";
+			pstmt = conn.prepareStatement(sql);
+			
+			System.out.println("**음료메뉴를 선택해주세요.");
+			burger.printDataDrink();
+			int selectdrk = choice.nextInt();
+			
+			System.out.println("수량을 선택해주세요.");
+	           
+	        int num = choice.nextInt();
+	        choice.nextLine();
+	           
+	        for(int i=1; i<=num; i++) {
+				pstmt.setString(1, id);
+				pstmt.setInt(2, selectdrk);
+				pstmt.setString(3, id);
+				pstmt.executeUpdate();
+	        }
+	        
+	        System.out.println("음료선택이 완료되었습니다~~~~!^0^");
+	        add(id);
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+		}
+		
+	}
+	
+	//회원의 디저트주문
+	public void selectDs(String id) {
+		
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+			
+			String sql = "";
+			sql += "INSERT INTO ORDERS ";
+			sql += "(ORDERID, CUSTID, DESSERTID, "
+					+ "BURGERID, DRINKID, SETID, ORDERDATE, LIST) ";
+			sql += "VALUES ((SELECT NVL(MAX(ORDERID),0)+1 ";
+			sql += "FROM ORDERS), ";
+			sql += "?, ?, 0      , 0      , 0, sysdate, ";
+			sql += "(SELECT NVL(MAX(LIST),0)+1\r\n" + 
+					"        FROM ORDERS WHERE CUSTID = ?)) ";
+			pstmt = conn.prepareStatement(sql);
+			
+			System.out.println("**디저트 메뉴를 선택해주세요.");
+			burger.printDataDessert();
+			int selectds = choice.nextInt();
+			
+			System.out.println("수량을 선택해주세요.");
+	           
+	        int num = choice.nextInt();
+	        choice.nextLine();
+	           
+	        for(int i=1; i<=num; i++) {
+				pstmt.setString(1, id);
+				pstmt.setInt(2, selectds);
+				pstmt.setString(3, id);
+				pstmt.executeUpdate();
+	        }
+			System.out.println("디저트선택이 완료되었습니다~~~~!^0^");
+			add(id);
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+		}
+		
+	}
+	
+	//회원의 세트주문
+	public void selectSet(String id) {
+			
+		try {
+			conn = DriverManager.getConnection(URL, USER, PASSWORD);
+		    
+			String sql = "";
+			sql += "INSERT INTO ORDERS ";
+			sql += "(ORDERID, CUSTID, SETID, "
+					+ "BURGERID, DRINKID, DESSERTID, ORDERDATE, LIST) ";
+			sql += "VALUES ((SELECT NVL(MAX(ORDERID),0)+1 ";
+			sql += "FROM ORDERS), ";
+			sql += "?, ?, 0, 0, 0, sysdate, ";
+			sql += "(SELECT NVL(MAX(LIST),0)+1\r\n" + 
+					"        FROM ORDERS WHERE CUSTID = ?)) ";
+			pstmt = conn.prepareStatement(sql);
+		    
+			System.out.println("**세트메뉴를 선택해주세요.");
+		    burger.printDataSet();
+		    int selectset = choice.nextInt();
+		           
+		    System.out.println("수량을 선택해주세요.");
+		           
+		    int num = choice.nextInt();
+		    choice.nextLine();
+		           
+		    for(int i=1; i<=num; i++) {
+		    	pstmt.setString(1, id);
+		    	pstmt.setInt(2, selectset);
+		    	pstmt.setString(3, id);
+		    	pstmt.executeUpdate();
+		    }
+		    System.out.println("세트선택이 완료되었습니다~~~~!^0^");
+		    add(id);
+		          	           
+		    } catch (SQLException e) {
+		    	e.printStackTrace();
+		    } finally {
+		        JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
+		    }
+			
+		}
+	
+	
+	//장바구니호출후 취소
+	public void bag() {
+		System.out.println("*~~~~* 주문 리스트 *~~~~*");
+		System.out.println("주문번호\t 고객번호\t 버거\t 음료\t 디저트\t 세트");
+		burger.printDataBag();
+		
+		System.out.println("주문하신 정보가 맞는지 확인해주세요.");
+			
+		while (pick!=1 || pick !=2) {
+			System.out.println("[주문이 완료되었습니다]\n"
+					+ "결제를 원하시면 < 1 >, 주문 취소를 원하시면 < 2 > 를 눌러주세요!");
+			
+			pick = choice.nextInt();
+	        choice.nextLine();
+			
+			if (pick == 1) {
+				wherecheck(id);
+			} else if (pick == 2) {//주문전체취소 
+				ordercancle(id);
+			} else {
+				System.out.println("< 1~2 > 다시 선택해주세요.(T_T)");
+				System.out.println("-----------------------------------------------");
+			}
+		}
+		
+	}
+	
+	//주문전체취소
+	public void ordercancle(String id) {
+		
+		while (pick!=1 || pick !=2) {
+			
+			System.out.println("[메뉴 취소확인] 주문하신 메뉴를 전체 취소하시겠습니까?");
+			System.out.println("전체 취소를 원하시면 < 1 > , 다시 장바구니로 돌아가려면 < 2 > 를 눌러주세요!");
+			
+			pick = choice.nextInt();
+	        choice.nextLine();
+			
+			if(pick==1) {
+				System.out.println("[장바구니 삭제] 주문이 전체 취소가 되었습니다.(T_T) \n"
+						+ "다시 시작 화면으로 돌아갑니다!");
+				ordbag.cancelmybag(id);
+				start();
+			} else if(pick==2) {
+				System.out.println("장바구니로 돌아갑니다!");
+				bag();
+			} else {
+				System.out.println("< 1~2 > 다시 선택해주세요.(T_T)");
+				System.out.println("-----------------------------------------------");
+			}
+		}
+		
+			
+	}
+
+
+	
+	double addPoint;
+	double pay;
+	
+	//결제 
+	public void wherecheck(String id) {
+		System.out.println("결제방법을 선택하세요.");
+		System.out.println("1.카드 2.현금");
+		
+		pick = choice.nextInt();
+		choice.nextLine();
+		if(pick == 1) {	//결제방법 선택창 (1.카드결제)
+			System.out.println("포인트를 사용하시려면 < 1 >, 사용하지 않고 적립하시려면 < 2 > 를 눌러주세요.");
+			System.out.println("(알림) 포인트 사용시 등급이 하락 될 수 있습니다.");
+			
+			System.out.println("[남은 포인트] : " + check.restPoint(id));
+			
+			pick = choice.nextInt();
+			choice.nextLine();		
+			
+			if(pick ==1) {//포인트선택창 
+				System.out.println("사용하실 포인트 금액을 지정해주십시오");
+				
+				pick = choice.nextInt();
+				choice.nextLine();
+				
+				if(pick>check.restPoint(id)) {//포인트 사용금액 지정 
+					System.out.println("포인트 사용 금액을 초과했습니다. 결제 화면으로 돌아갑니다.");
+					wherecheck(id);
+				} else if (pick<=check.restPoint(id)) {
+					check.fixPoint(pick, id);
+					check.Updategrade(id);
+					System.out.println((int)(check.payment(pick, id))+" 원이 카드로 결제가 되었습니다.\n"
+							+ " 감사합니다! 또 방문해주세요! ^0^ !!");
+					check.totPoint(id);
+					check.Updategrade(id);
+					check.bill(id);
+					start();
+					
+				} //포인트 사용금액 지정창 끝 
+				
+			} else if (pick ==2) {
+				check.fixPoint(0, id);
+				check.Updategrade(id);
+				System.out.println(check.payment(0, id)+ " 원이 카드로 결제가 되었습니다.\n"
+						+ " 감사합니다! 또 방문해주세요! ^0^ !!");
+				check.totPoint(id);
+				check.Updategrade(id);
+				check.bill(id);
+				start();
+				
+			}//포인트 선택창끝 
+			
+		} else if (pick == 2) {//2.현금결제 
+			System.out.println("포인트를 사용하시려면 < 1 >, 사용하지 않고 적립하시려면 < 2 > 를 눌러주세요.");
+			System.out.println("(알림) 포인트 사용시 등급이 하락 될 수 있습니다.");
+			
+			System.out.println("남은포인트" + check.restPoint(id));
+			
+			pick = choice.nextInt();
+			choice.nextLine();
+			
+			if(pick ==1) {//포인트선택창 
+				System.out.println("사용하실 포인트 금액을 지정해주십시오");
+				
+				pick = choice.nextInt();
+				choice.nextLine();
+				
+				if(pick>check.restPoint(id)) {//포인트 사용금액 지정 
+					System.out.println("포인트 사용 금액을 초과했습니다. 결제 화면으로 돌아갑니다.");
+					wherecheck(id);
+					
+				} else if (pick<=check.restPoint(id)) {
+					check.fixPoint(pick, id);
+					check.Updategrade(id);
+					System.out.println(check.payment(pick, id)+" 원이 현금으로 결제가 되었습니다.\n"
+							+ " 감사합니다! 또 방문해주세요! ^0^ !!");
+					check.totPoint(id);
+					check.Updategrade(id);
+					check.bill(id);
+					start();
+				} //포인트 사용금액 지정창 끝 
+				
+				
+			} else if (pick ==2) {
+				
+				check.fixPoint(0, id);
+				check.Updategrade(id);
+				System.out.println(check.payment(0, id)+" 원이 현금으로 결제가 되었습니다.\n"
+						+ " 감사합니다! 또 방문해주세요! ^0^ !!");
+				check.bill(id);
+				check.totPoint(id);
+				check.Updategrade(id);
+				start();
+				
+			}//포인트선택창 끝 
+			
+		} else { //카드,현금 잘못 눌렀을 경우 
+			System.out.println("< 1~2 > 다시 선택해주세요.(T_T)");
+			System.out.println("-----------------------------------------------");
+			wherecheck(id);
+			
+		}//결제방법 선택창 끝 
+		
+	}
+	
+	
+	
+}
