@@ -102,6 +102,7 @@ public class Burger {
 				sql += "SELECT B.BURGERID, B.BURGERNAME, COUNT(*), B.PRICE ";
 				sql += "  FROM ORDERS O, BURGER B ";
 				sql += " WHERE O.BURGERID = B.BURGERID ";
+				sql += " AND O.BURGERID !=0 AND O.BURGERID IS NOT NULL ";
 				sql += " AND CUSTID = ? ";
 				sql += " GROUP BY B.BURGERID, B.BURGERNAME, B.PRICE ";
 				pstmt = conn.prepareStatement(sql);
@@ -110,17 +111,15 @@ public class Burger {
 				
 				rs = pstmt.executeQuery();
 				
-				if (rs.next()) {
+				while (rs.next()) {
 					String str = "";
 					str += rs.getString(1) + "\t";
 					str += rs.getString(2) + "\t";
 					str += rs.getInt(3) + "\t";
 					str += rs.getInt(4);
 					System.out.println(str);
-				} else {
-					System.out.println("데이터 없음!");
-				}
-			
+				} 
+				
 			} catch (SQLException e) {
 				e.printStackTrace();
 			} finally {
@@ -142,6 +141,7 @@ public class Burger {
 			sql += "SELECT D.DRINKID, D.DRINKNAME, COUNT(*), D.PRICE ";
 			sql += "  FROM ORDERS O, DRINK D ";
 			sql += " WHERE O.DRINKID = D.DRINKID ";
+			sql += " AND O.DRINKID !=0 AND O.DRINKID IS NOT NULL ";
 			sql += " AND CUSTID = ? ";
 			sql += " GROUP BY D.DRINKID, D.DRINKNAME, D.PRICE ";
 			pstmt = conn.prepareStatement(sql);
@@ -150,16 +150,14 @@ public class Burger {
 			
 			rs = pstmt.executeQuery();
 			
-			if (rs.next()) {
+			while (rs.next()) {
 				String str = "";
 				str += rs.getString(1) + "\t";
 				str += rs.getString(2) + "\t";
 				str += rs.getInt(3) + "\t";
 				str += rs.getInt(4);
 				System.out.println(str);
-			} else {
-				System.out.println("데이터 없음!");
-			}
+			} 
 		
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -182,6 +180,7 @@ public class Burger {
 			sql += "SELECT DE.DESSERTID, DE.DESSERTNAME, COUNT(*), DE.PRICE ";
 			sql += "  FROM ORDERS O, DESSERT DE ";
 			sql += " WHERE O.DESSERTID = DE.DESSERTID ";
+			sql += " AND O.DESSERTID !=0 AND O.DESSERTID IS NOT NULL ";
 			sql += " AND CUSTID = ? ";
 			sql += " GROUP BY DE.DESSERTID, DE.DESSERTNAME, DE.PRICE ";
 			pstmt = conn.prepareStatement(sql);
@@ -190,16 +189,14 @@ public class Burger {
 			
 			rs = pstmt.executeQuery();
 			
-			if (rs.next()) {
+			while (rs.next()) {
 				String str = "";
 				str += rs.getString(1) + "\t";
 				str += rs.getString(2) + "\t";
 				str += rs.getInt(3) + "\t";
 				str += rs.getInt(4);
 				System.out.println(str);
-			} else {
-				System.out.println("데이터 없음!");
-			}
+			} 
 		
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -222,6 +219,7 @@ public class Burger {
 			sql += "SELECT S.SETID, S.SETNAME, COUNT(*), S.PRICE ";
 			sql += "  FROM ORDERS O, SETMENU S ";
 			sql += " WHERE O.SETID = S.SETID ";
+			sql += " AND O.SETID !=0 AND O.SETID IS NOT NULL ";
 			sql += " AND CUSTID = ? ";
 			sql += " GROUP BY S.SETID, S.SETNAME, S.PRICE ";
 			pstmt = conn.prepareStatement(sql);
@@ -230,15 +228,13 @@ public class Burger {
 			
 			rs = pstmt.executeQuery();
 			
-			if (rs.next()) {
+			while (rs.next()) {
 				String str = "";
 				str += rs.getString(1) + "\t";
 				str += rs.getString(2) + "\t";
 				str += rs.getInt(3) + "\t";
 				str += rs.getInt(4);
 				System.out.println(str);
-			} else {
-				System.out.println("데이터 없음!");
 			}
 		
 		} catch (SQLException e) {
@@ -408,27 +404,6 @@ public class Burger {
 		}
 		
 		return list;
-		
-	}
-	
-	//주문후 장바구니 데이터 삭제 
-	public void deletebag(String id) {
-		
-		try {
-			conn = DriverManager.getConnection(URL, USER, PASSWORD);
-			
-			String sql = "";
-			sql += "DELETE FROM ORDERS ";
-			
-			pstmt = conn.prepareStatement(sql);
-			pstmt.executeUpdate();
-			
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			JDBC_Close.closeConnStmtRs(conn, pstmt, rs);
-		}
 		
 	}
 	
